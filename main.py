@@ -58,6 +58,3 @@ folder_path = 'data'
 
 image = create_segmentation(folder_path, coords)
 mask = sitk.ReadImage('mask_temp.nii.gz')
-
-
-get_features(image, mask)
