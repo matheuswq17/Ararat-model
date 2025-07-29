@@ -1,60 +1,26 @@
-import numpy as np
-import SimpleITK as sitk
+from classes.pipeline import RadiomicsPipeline
 import os
 
-from radiomics.featureextractor import RadiomicsFeatureExtractor
-
-def create_segmentation(dicom_folder, center_mm, radius_mm=5, result_file="mask_temp.nii.gz"):
-    reader = sitk.ImageSeriesReader()
-    series_IDs = reader.GetGDCMSeriesIDs(dicom_folder)
-    dicom_names = reader.GetGDCMSeriesFileNames(dicom_folder, series_IDs[0])
-    reader.SetFileNames(dicom_names)
-    image = reader.Execute()
-
-    img_np = sitk.GetArrayFromImage(image)
+if __name__ == "__main__":
+    # caminho para a pasta que tem os dados brutos (PROSTATEx, planilha.csv)
+    DATA_FOLDER = 'data'
     
-    spacing = image.GetSpacing()
-    origin = image.GetOrigin()
-    direction = image.GetDirection()
-
-    voxel_center = [(center_mm[i] - origin[i]) / spacing[i] for i in range(3)]
-    voxel_center = np.round(voxel_center).astype(int)
-
-    mask = np.zeros_like(img_np, dtype=np.uint8)
-    zz, yy, xx = np.ogrid[:mask.shape[0], :mask.shape[1], :mask.shape[2]]
-    distance = (
-        (xx - voxel_center[0])**2 +
-        (yy - voxel_center[1])**2 +
-        ((zz - voxel_center[2])**2)**0.5
+    # caminho completo para a planilha e para a pasta base das imagens
+    CSV_PATH = os.path.join(DATA_FOLDER, 'ProstateX-2-Findings-Train.csv')
+    IMAGES_BASE_PATH = os.path.join(DATA_FOLDER, 'PROSTATEx')
+    
+    print("Iniciando o pipeline de extração de características radiômicas.")
+    
+    # cria uma instância da pipeline
+    pipeline = RadiomicsPipeline(
+        spreadsheet_path=CSV_PATH,
+        images_base_path=IMAGES_BASE_PATH,
+        series_id='t2tsetra'  # altere se necessário
     )
-
-    mask[distance <= radius_mm / spacing[0]] = 1
-
-    mask_itk = sitk.GetImageFromArray(mask)
-    mask_itk.SetSpacing(spacing)
-    mask_itk.SetOrigin(origin)
-    mask_itk.SetDirection(direction)
     
-    sitk.WriteImage(mask_itk, result_file)
-
-    return image
-
-def get_features(image_path, roi_path):
-    extractor = RadiomicsFeatureExtractor()
-
-    extractor.settings['geometryTolerance'] = 1e-5
-
-    features = extractor.execute(image_path, roi_path)
-
-    for k, v in features.items():
-        print(f"{k}: {v}")
-
-x = -8.58088
-y = 26.3826
-z = 26.3826
-
-coords = [x, y, z]
-folder_path = 'data'
-
-image = create_segmentation(folder_path, coords)
-mask = sitk.ReadImage('mask_temp.nii.gz')
+    # executa a pipeline
+    results_df = pipeline.run()
+    
+    if results_df is not None:
+        print("\nResumo dos resultados:")
+        print(results_df.head())
