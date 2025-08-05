@@ -1,3 +1,10 @@
-venv
-mask_temp.nii.gz
-data
+.venv/
+venv/
+
+__pycache__/
+*.pyc
+
+data/
+*.csv
+
+AutoML_SHAP_Analysis/
