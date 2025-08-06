@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import os
 import shutil
 
+from sklearn.metrics import accuracy_score, classification_report
 
 from supervised.algorithms.lightgbm import LightgbmAlgorithm
 from supervised.algorithms.xgboost import XgbAlgorithm
@@ -178,4 +179,44 @@ try:
 except IndexError:
     print("  - Não foi possível encontrar exemplos para todos os níveis de probabilidade para os Decision Plots. Pulando esta etapa.")
 
-print("\nAnálise SHAP concluída com sucesso! Verifique os arquivos .png na pasta do projeto.")
+# imprimir resumo da performance
+print("\n" + "="*50)
+print("     RESUMO DA PERFORMANCE DO MELHOR MODELO")
+print("="*50)
+
+# pega o logloss do leaderboard que ja carregamos
+best_model_logloss = leaderboard[leaderboard['name'] == best_individual_model_name]['metric_value'].iloc[0]
+
+# carrega as predicoes para calcular a acuracia
+predictions_path = os.path.join(specific_model_path_dir, 'predictions_validation.csv')
+predictions_df = pd.read_csv(predictions_path)
+
+# pega o valor real da coluna 'target' (que usa labels 0, 1, 2, 3, 4)
+y_true = predictions_df['target']
+
+# pega todas as colunas de probabilidade (prediction_1, prediction_2, ...)
+prob_cols = [col for col in predictions_df.columns if 'prediction_' in col]
+# encontra a classe prevista (que será 1, 2, 3, 4, 5)
+y_pred_original = predictions_df[prob_cols].idxmax(axis=1).str.replace('prediction_', '').astype(int)
+
+y_pred = y_pred_original - 1
+
+# calcula as metricas
+accuracy = accuracy_score(y_true, y_pred)
+
+# os labels internos são 0, 1, 2, 3, 4
+internal_labels = sorted(y_true.unique())
+# mas queremos mostrar os nomes de classe reais (1, 2, 3, 4, 5) no relatório
+target_names = [f"Classe {label+1}" for label in internal_labels]
+
+report = classification_report(y_true, y_pred, target_names=target_names, zero_division=0)
+
+# imprime o relatorio
+print(f"Melhor Modelo: {best_individual_model_name}")
+print(f"Logloss (Validação): {best_model_logloss:.4f}")
+print(f"Acurácia Geral (Validação): {accuracy:.2%}")
+print("\nRelatório de Classificação por Classe:")
+print(report)
+print("="*50)
+
+print("\nAnálise SHAP e de Performance concluída com sucesso!")
