@@ -29,15 +29,15 @@ Antes de tudo, certifique-se de que o ambiente está corretamente configurado.
 #### a. Estrutura de Dados
 O projeto espera que a pasta `/data` contenha os seguintes arquivos (ela é ignorada pelo Git, então você precisa adicioná-los manualmente):
 
-ARARAT-MODEL-MAIN/
-└── data/
-├── PROSTATEx/
-│ ├── ProstateX-0000/
-│ │ ├── ... (séries de imagens DICOM)
-│ │ └── segmentation_ProstateX-0000_finding-1.nii.gz <- Exemplo de máscara
-│ ├── ProstateX-0001/
-│ └── ...
-└── ProstateX-2-Findings-Train.csv
+ARARAT-MODEL-MAIN/ <br>
+└── data/ <br>
+├── PROSTATEx/ <br>
+│ ├── ProstateX-0000/ <br>
+│ │ ├── ... (séries de imagens DICOM) <br>
+│ │ └── segmentation_ProstateX-0000_finding-1.nii.gz <- Exemplo de máscara <br>
+│ ├── ProstateX-0001/ <br>
+│ └── ... <br>
+└── ProstateX-2-Findings-Train.csv <br>
 
 > **Nota:** É crucial que as máscaras de segmentação estejam presentes para cada lesão que se deseja analisar. A convenção de nomenclatura das máscaras deve ser ajustada no arquivo `classes/segmentation.py`.
 
@@ -47,8 +47,8 @@ Crie um ambiente virtual e instale todas as bibliotecas necessárias.
 ```bash
 # 1. Crie e ative um ambiente virtual (recomendado)
 python -m venv .venv
-source .venv/bin/activate  # No Linux/macOS
-# .\.venv\Scripts\activate    # No Windows (PowerShell)
+.\.venv\Scripts\activate    # No Windows (PowerShell)
+#source .venv/bin/activate  # No Linux/macOS
 
 # 2. Instale todas as dependências listadas
 pip install -r requirements.txt
