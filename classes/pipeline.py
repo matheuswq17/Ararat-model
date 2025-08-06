@@ -5,17 +5,24 @@ from radiomics.featureextractor import RadiomicsFeatureExtractor
 from classes.segmentation import Segmentation
 
 class RadiomicsPipeline():
-    def __init__(self, spreadsheet_path, images_base_path, series_id='t2_tse_tra'):
+    # adicionado 'output_filename' como um parâmetro aqui
+    def __init__(self, spreadsheet_path, images_base_path, series_id='t2_tse_tra', output_filename="radiomics_features.csv"):
         self.spreadsheet_path = spreadsheet_path
         self.images_base_path = images_base_path
         self.series_id = series_id
+        # salva o nome do arquivo de saída
+        self.output_filename = output_filename
         self.extractor = RadiomicsFeatureExtractor()
-        print("RadiomicsPipeline inicializado.")
-        
+        print(f"RadiomicsPipeline inicializado para a série '{self.series_id}'.")
+
     def _find_dicom_series(self, patient_path):
         for root, dirs, files in os.walk(patient_path):
+            # adicionada uma pequena lógica para lidar com nomes de série ADC que as vezes são apenas números
+            series_to_find = self.series_id.lower()
             for d in dirs:
-                if self.series_id.lower() in d.lower() and len(os.listdir(os.path.join(root, d))) > 10:
+                dir_lower = d.lower()
+                # A condição agora é mais flexível
+                if (series_to_find in dir_lower or series_to_find.replace(" ", "") in dir_lower.replace(" ", "")) and len(os.listdir(os.path.join(root, d))) > 10:
                     print(f"  > Série encontrada: {d}")
                     return os.path.join(root, d)
         raise FileNotFoundError(f"Nenhuma série correspondente a '{self.series_id}' encontrada em {patient_path}")
@@ -48,14 +55,13 @@ class RadiomicsPipeline():
                 features['PatientID'] = patient_id
                 features['FindingID'] = finding_id
                 
-                for col in ['ggg', 'zone', 'ClinSig']: # colunas adicionais
-                    if col in row and pd.notna(row[col]):
-                        features[col] = row[col]
+                if 't2tsetra' in self.series_id:
+                    for col in ['ggg', 'zone', 'ClinSig']: # colunas adicionais
+                        if col in row and pd.notna(row[col]):
+                            features[col] = row[col]
 
                 all_results.append(features)
-                
                 print(f"  [SUCESSO] Features extraídas para a lesão {finding_id}.")
-
             except Exception as e:
                 print(f"  !!!!!!!! [FALHA] ao processar {patient_id}, Lesão {finding_id}. Erro: {e}")
         
@@ -64,7 +70,6 @@ class RadiomicsPipeline():
             return
 
         df_final = pd.DataFrame(all_results)
-        output_filename = "radiomics_features_final.csv"
-        df_final.to_csv(output_filename, index=False)
-        print(f"\n\nPIPELINE CONCLUÍDO! Arquivo '{output_filename}' salvo com {len(df_final)} linhas.")
+        df_final.to_csv(self.output_filename, index=False)
+        print(f"\n\nPIPELINE PARA '{self.series_id}' CONCLUÍDO! Arquivo '{self.output_filename}' salvo com {len(df_final)} linhas.")
         return df_final
