@@ -63,7 +63,6 @@ Este passo lê as imagens DICOM, aplica as máscaras de segmentação e extrai m
 Para executar a Fase 1, rode o seguinte comando no terminal:
 
 python main.py
-Use code with caution.
 
 Ao final, você terá os arquivos radiomics_features_t2.csv e radiomics_features_adc.csv (ou outros, conforme configurado) na raiz do projeto.
 3. Fase 2: Treinamento, Análise e Interpretabilidade
@@ -71,7 +70,6 @@ Este passo carrega os CSVs gerados, combina os dados, treina múltiplos modelos 
 Para executar a Fase 2, rode o seguinte comando no terminal:
 
 python analyze_shap.py
-Use code with caution.
 
 
 4. Análise dos Resultados
